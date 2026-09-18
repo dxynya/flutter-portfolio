@@ -272,7 +272,7 @@ class HomeScreen extends StatelessWidget {
           CrossAxisAlignment.start,
       children: [
         Text(
-          'HELLO, I\'M',
+          'HELLO, WE\'RE',
           style: TextStyle(
             color: isDark
                 ? Colors.black54
@@ -286,7 +286,7 @@ class HomeScreen extends StatelessWidget {
         const SizedBox(height: 5),
 
         Text(
-          'DAYANA',
+          'DAYANA & CAER',
           style: TextStyle(
             color: isDark
                 ? Colors.black
@@ -300,7 +300,7 @@ class HomeScreen extends StatelessWidget {
         const SizedBox(height: 8),
 
         Text(
-          'Flutter Developer • Student',
+          'Student at NEMSU-LC',
           style: TextStyle(
             color: isDark
                 ? Colors.black54

@@ -27,8 +27,6 @@ class _Activity2ScreenState extends State<Activity2Screen> {
 
   int _progress = 0;
 
-  Timer? _requestTimer;
-
   @override
   void initState() {
     super.initState();
@@ -41,17 +39,34 @@ class _Activity2ScreenState extends State<Activity2Screen> {
     );
   }
 
+  // ==========================================
+  // INITIAL NETWORK CHECK
+  // ==========================================
+
   Future<void> _initializeConnectivity() async {
     try {
-      final result = await _connectivity.checkConnectivity();
+      final result =
+          await _connectivity.checkConnectivity();
 
       if (!mounted) return;
 
-      _handleConnectivityChange(result);
+      setState(() {
+        _connectionTypes = result;
+      });
+
+      _addLog(
+        'Current network: ${_networkName(result)}',
+      );
     } catch (e) {
-      _addLog('Unable to read network status.');
+      _addLog(
+        'Unable to detect network status.',
+      );
     }
   }
+
+  // ==========================================
+  // NETWORK STREAM LISTENER
+  // ==========================================
 
   void _handleConnectivityChange(
     List<ConnectivityResult> result,
@@ -64,22 +79,25 @@ class _Activity2ScreenState extends State<Activity2Screen> {
 
     final network = _networkName(result);
 
-    _addLog('Network changed: $network');
+    _addLog(
+      'Network changed: $network',
+    );
 
-    if (_hasConnection(result)) {
-      if (_requestQueued && !_requestRunning) {
-        _addLog(
-          'Connection restored. Resuming queued request...',
-        );
+    // Connection restored
+    if (_hasConnection(result) &&
+        _requestQueued &&
+        !_requestRunning) {
+      _addLog(
+        'Connection restored. Resuming from $_progress%.',
+      );
 
-        _startRequest();
-      }
-    } else {
-      if (_requestRunning) {
-        _queueCurrentRequest();
-      }
+      _startRequest();
     }
   }
+
+  // ==========================================
+  // CONNECTION CHECK
+  // ==========================================
 
   bool _hasConnection(
     List<ConnectivityResult> result,
@@ -89,49 +107,77 @@ class _Activity2ScreenState extends State<Activity2Screen> {
     );
   }
 
+  // ==========================================
+  // NETWORK NAME
+  // ==========================================
+
   String _networkName(
     List<ConnectivityResult> result,
   ) {
-    if (result.contains(ConnectivityResult.wifi)) {
+    if (result.contains(
+      ConnectivityResult.wifi,
+    )) {
       return 'WI-FI';
     }
 
-    if (result.contains(ConnectivityResult.mobile)) {
+    if (result.contains(
+      ConnectivityResult.mobile,
+    )) {
       return 'CELLULAR';
     }
 
-    if (result.contains(ConnectivityResult.ethernet)) {
+    if (result.contains(
+      ConnectivityResult.ethernet,
+    )) {
       return 'ETHERNET';
     }
 
-    if (result.contains(ConnectivityResult.vpn)) {
+    if (result.contains(
+      ConnectivityResult.vpn,
+    )) {
       return 'VPN';
     }
 
-    if (result.contains(ConnectivityResult.none)) {
+    if (result.contains(
+      ConnectivityResult.none,
+    )) {
       return 'OFFLINE';
     }
 
     return 'OTHER';
   }
 
+  // ==========================================
+  // NETWORK ICON
+  // ==========================================
+
   IconData _networkIcon(
     List<ConnectivityResult> result,
   ) {
-    if (result.contains(ConnectivityResult.wifi)) {
+    if (result.contains(
+      ConnectivityResult.wifi,
+    )) {
       return Icons.wifi;
     }
 
-    if (result.contains(ConnectivityResult.mobile)) {
+    if (result.contains(
+      ConnectivityResult.mobile,
+    )) {
       return Icons.signal_cellular_alt;
     }
 
-    if (result.contains(ConnectivityResult.none)) {
+    if (result.contains(
+      ConnectivityResult.none,
+    )) {
       return Icons.wifi_off;
     }
 
     return Icons.device_hub;
   }
+
+  // ==========================================
+  // EVENT LOG
+  // ==========================================
 
   void _addLog(String message) {
     if (!mounted) return;
@@ -142,15 +188,20 @@ class _Activity2ScreenState extends State<Activity2Screen> {
         '${TimeOfDay.now().format(context)}  •  $message',
       );
 
-      if (_eventLog.length > 8) {
+      if (_eventLog.length > 10) {
         _eventLog.removeLast();
       }
     });
   }
 
+  // ==========================================
+  // START REQUEST
+  // ==========================================
+
   void _startRequest() {
     if (_requestRunning) return;
 
+    // No connection
     if (!_hasConnection(_connectionTypes)) {
       setState(() {
         _requestQueued = true;
@@ -166,69 +217,91 @@ class _Activity2ScreenState extends State<Activity2Screen> {
     setState(() {
       _requestRunning = true;
       _requestQueued = false;
-      _progress = 0;
     });
 
-    _addLog('Large dataset request started.');
+    if (_progress == 0) {
+      _addLog(
+        'Large dataset request started.',
+      );
+    } else {
+      _addLog(
+        'Resuming queued request from $_progress%.',
+      );
+    }
 
-    _requestTimer?.cancel();
+    _performNetworkRequest();
+  }
 
-    _requestTimer = Timer.periodic(
-      const Duration(seconds: 1),
-      (timer) {
+  // ==========================================
+  // SIMULATED LONG-RUNNING REQUEST
+  // ==========================================
+
+  Future<void> _performNetworkRequest() async {
+    try {
+      while (_progress < 100) {
+        await Future.delayed(
+          const Duration(seconds: 1),
+        );
+
+        // Simulate a request failure when
+        // there is no connection.
         if (!_hasConnection(_connectionTypes)) {
-          _queueCurrentRequest();
-          timer.cancel();
-          return;
+          throw Exception(
+            'Connection lost during request.',
+          );
         }
 
-        if (!mounted) {
-          timer.cancel();
-          return;
-        }
+        if (!mounted) return;
 
         setState(() {
           _progress += 10;
+
+          if (_progress > 100) {
+            _progress = 100;
+          }
         });
 
         _addLog(
           'Downloading dataset... $_progress%',
         );
+      }
 
-        if (_progress >= 100) {
-          timer.cancel();
+      if (!mounted) return;
 
-          setState(() {
-            _requestRunning = false;
-            _requestQueued = false;
-          });
+      setState(() {
+        _requestRunning = false;
+        _requestQueued = false;
+      });
 
-          _addLog(
-            'Request completed successfully.',
-          );
-        }
-      },
-    );
-  }
+      _addLog(
+        'Request completed successfully.',
+      );
 
-  void _queueCurrentRequest() {
-    if (!_requestRunning && !_requestQueued) {
-      return;
+      // Reset after successful completion.
+      setState(() {
+        _progress = 0;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        _requestRunning = false;
+        _requestQueued = true;
+      });
+
+      _addLog(
+        'Request failed because the connection was lost.',
+      );
+
+      _addLog(
+        'Request queued safely for recovery.',
+      );
     }
-
-    _requestTimer?.cancel();
-
-    if (!mounted) return;
-
-    setState(() {
-      _requestRunning = false;
-      _requestQueued = true;
-    });
-
-    _addLog(
-      'Connection lost. Request queued safely.',
-    );
   }
+
+  // ==========================================
+  // CLEAR EVENT LOG
+  // ==========================================
 
   void _clearLog() {
     setState(() {
@@ -236,19 +309,27 @@ class _Activity2ScreenState extends State<Activity2Screen> {
     });
   }
 
+  // ==========================================
+  // DISPOSE
+  // ==========================================
+
   @override
   void dispose() {
-    _requestTimer?.cancel();
     _connectivitySubscription?.cancel();
     super.dispose();
   }
+
+  // ==========================================
+  // BUILD UI
+  // ==========================================
 
   @override
   Widget build(BuildContext context) {
     final isDark =
         Theme.of(context).brightness == Brightness.dark;
 
-    final networkName = _networkName(_connectionTypes);
+    final networkName =
+        _networkName(_connectionTypes);
 
     return Scaffold(
       appBar: AppBar(
@@ -276,96 +357,18 @@ class _Activity2ScreenState extends State<Activity2Screen> {
                     CrossAxisAlignment.start,
 
                 children: [
-                  // =========================
-                  // ACTIVITY INFORMATION
-                  // =========================
 
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(25),
+                  // ======================================
+                  // ACTIVITY HEADER
+                  // ======================================
 
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white
-                          : Colors.black,
-                      borderRadius:
-                          BorderRadius.circular(25),
-                    ),
-
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '100 POINTS',
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.black54
-                                : Colors.white70,
-                            fontSize: 12,
-                            fontWeight:
-                                FontWeight.bold,
-                            letterSpacing: 2,
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        Text(
-                          'HANDS-ON ACTIVITY #2',
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.black
-                                : Colors.white,
-                            fontSize: 28,
-                            fontWeight:
-                                FontWeight.w900,
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        Text(
-                          'Active Network Monitor & Handover Handling',
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.black87
-                                : Colors.white70,
-                            fontSize: 16,
-                            fontWeight:
-                                FontWeight.w600,
-                          ),
-                        ),
-
-                        const SizedBox(height: 15),
-
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.calendar_today_outlined,
-                              size: 16,
-                              color: isDark
-                                  ? Colors.black54
-                                  : Colors.white70,
-                            ),
-
-                            const SizedBox(width: 8),
-
-                            Text(
-                              'Due 18 Sept, 23:59',
-                              style: TextStyle(
-                                color: isDark
-                                    ? Colors.black54
-                                    : Colors.white70,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
+                  _activityHeader(isDark),
 
                   const SizedBox(height: 25),
+
+                  // ======================================
+                  // OBJECTIVE
+                  // ======================================
 
                   _sectionTitle(
                     'OBJECTIVE',
@@ -374,21 +377,19 @@ class _Activity2ScreenState extends State<Activity2Screen> {
 
                   const SizedBox(height: 10),
 
-                  _contentCard(
+                  _infoCard(
                     isDark,
-                    child: const Text(
-                      'Build an application that monitors network '
-                      'states in real-time and gracefully handles '
-                      'handovers between Wi-Fi and Cellular networks '
-                      'without dropping pending data requests.',
-                      style: TextStyle(
-                        fontSize: 15,
-                        height: 1.6,
-                      ),
-                    ),
+                    'Build an application that monitors network '
+                    'states in real-time and gracefully handles '
+                    'handovers between Wi-Fi and Cellular networks '
+                    'without dropping pending data requests.',
                   ),
 
                   const SizedBox(height: 25),
+
+                  // ======================================
+                  // INSTRUCTIONS
+                  // ======================================
 
                   _sectionTitle(
                     'INSTRUCTIONS',
@@ -399,69 +400,68 @@ class _Activity2ScreenState extends State<Activity2Screen> {
 
                   _instructionCard(
                     isDark,
-                    number: '01',
-                    title: 'Activity Integration',
-                    description:
-                        'Add a new "Network Monitor" screen to your '
-                        'existing master compilation app.',
-                    icon: Icons.add_to_photos_outlined,
+                    '01',
+                    'Activity Integration',
+                    'Add a new "Network Monitor" screen to your '
+                    'existing master compilation app.',
+                    Icons.add_to_photos_outlined,
                   ),
 
                   const SizedBox(height: 12),
 
                   _instructionCard(
                     isDark,
-                    number: '02',
-                    title: 'Network Stream Listener',
-                    description:
-                        'Integrate a networking package such as '
-                        'connectivity_plus to subscribe to real-time '
-                        'network state changes.',
-                    icon: Icons.sync_outlined,
+                    '02',
+                    'Network Stream Listener',
+                    'Integrate a networking package such as '
+                    'connectivity_plus to subscribe to real-time '
+                    'network state changes.',
+                    Icons.sync_outlined,
                   ),
 
                   const SizedBox(height: 12),
 
                   _instructionCard(
                     isDark,
-                    number: '03',
-                    title: 'Real-time UI',
-                    description:
-                        'Design a dashboard that dynamically updates '
-                        'to display the current active network interface '
-                        '(Wi-Fi, Cellular, or Offline) using stream listeners.',
-                    icon: Icons.dashboard_outlined,
+                    '03',
+                    'Real-time UI',
+                    'Design a dashboard that dynamically updates '
+                    'to display the current active network interface '
+                    '(Wi-Fi, Cellular, or Offline) using stream listeners.',
+                    Icons.dashboard_outlined,
                   ),
 
                   const SizedBox(height: 12),
 
                   _instructionCard(
                     isDark,
-                    number: '04',
-                    title: 'Request Queuing System',
-                    description:
-                        'Write logic to simulate a continuous or long-running '
-                        'network request, such as fetching a large dataset. '
-                        'If the connection drops during an IP migration or '
-                        'handover, catch the error and queue the request instead '
-                        'of crashing.',
-                    icon: Icons.queue_play_next_outlined,
+                    '04',
+                    'Request Queuing System',
+                    'Write logic to simulate a continuous or long-running '
+                    'network request, such as fetching a large dataset. '
+                    'If the connection drops during an IP migration or '
+                    'handover, catch the error and queue the request instead '
+                    'of crashing.',
+                    Icons.queue_outlined,
                   ),
 
                   const SizedBox(height: 12),
 
                   _instructionCard(
                     isDark,
-                    number: '05',
-                    title: 'Graceful Recovery',
-                    description:
-                        'Utilize connection callback streams to automatically '
-                        'resume or retry queued network requests as soon as a '
-                        'stable Cellular or Wi-Fi connection is re-established.',
-                    icon: Icons.replay_outlined,
+                    '05',
+                    'Graceful Recovery',
+                    'Utilize connection callback streams to automatically '
+                    'resume or retry queued network requests as soon as a '
+                    'stable Cellular or Wi-Fi connection is re-established.',
+                    Icons.replay_outlined,
                   ),
 
                   const SizedBox(height: 25),
+
+                  // ======================================
+                  // DELIVERABLES
+                  // ======================================
 
                   _sectionTitle(
                     'DELIVERABLES',
@@ -470,112 +470,37 @@ class _Activity2ScreenState extends State<Activity2Screen> {
 
                   const SizedBox(height: 10),
 
-                  _contentCard(
+                  _infoCard(
                     isDark,
-                    child: Row(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 45,
-                          height: 45,
-                          decoration: BoxDecoration(
-                            color: isDark
-                                ? Colors.white
-                                : Colors.black,
-                            borderRadius:
-                                BorderRadius.circular(14),
-                          ),
-                          child: Icon(
-                            Icons.video_camera_back_outlined,
-                            color: isDark
-                                ? Colors.black
-                                : Colors.white,
-                          ),
-                        ),
-
-                        const SizedBox(width: 15),
-
-                        const Expanded(
-                          child: Text(
-                            'Submit the link to your updated source code '
-                            'repository along with a screen recording demonstrating '
-                            'the real-time UI changing during a network handover '
-                            '(for example, toggling Wi-Fi off to force a switch to '
-                            'Cellular) and the successful recovery of a queued request.',
-                            style: TextStyle(
-                              fontSize: 15,
-                              height: 1.6,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    'Submit the link to your updated source code repository '
+                    'along with a screen recording demonstrating the real-time '
+                    'UI changing during a network handover (e.g., toggling '
+                    'Wi-Fi off to force a switch to Cellular) and the successful '
+                    'recovery of a queued request.',
                   ),
 
                   const SizedBox(height: 35),
 
-                  // =========================
-                  // LIVE NETWORK MONITOR
-                  // =========================
+                  // ======================================
+                  // LIVE DEMONSTRATION HEADER
+                  // ======================================
 
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(25),
-
-                    decoration: BoxDecoration(
-                      color: isDark
-                          ? Colors.white
-                          : Colors.black,
-                      borderRadius:
-                          BorderRadius.circular(25),
-                    ),
-
-                    child: Column(
-                      crossAxisAlignment:
-                          CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'LIVE DEMONSTRATION',
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.black54
-                                : Colors.white70,
-                            fontSize: 11,
-                            fontWeight:
-                                FontWeight.bold,
-                            letterSpacing: 3,
-                          ),
-                        ),
-
-                        const SizedBox(height: 8),
-
-                        Text(
-                          'NETWORK MONITOR',
-                          style: TextStyle(
-                            color: isDark
-                                ? Colors.black
-                                : Colors.white,
-                            fontSize: 27,
-                            fontWeight:
-                                FontWeight.w900,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+                  _liveHeader(isDark),
 
                   const SizedBox(height: 20),
 
-                  // CURRENT NETWORK
+                  // ======================================
+                  // NETWORK STATUS
+                  // ======================================
+
                   _monitorCard(
                     isDark,
 
                     child: Column(
                       children: [
                         Container(
-                          width: 90,
-                          height: 90,
+                          width: 100,
+                          height: 100,
 
                           decoration: BoxDecoration(
                             color: isDark
@@ -588,10 +513,10 @@ class _Activity2ScreenState extends State<Activity2Screen> {
                             _networkIcon(
                               _connectionTypes,
                             ),
+                            size: 48,
                             color: isDark
                                 ? Colors.black
                                 : Colors.white,
-                            size: 42,
                           ),
                         ),
 
@@ -601,8 +526,7 @@ class _Activity2ScreenState extends State<Activity2Screen> {
                           'CURRENT ACTIVE NETWORK',
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight:
-                                FontWeight.bold,
+                            fontWeight: FontWeight.bold,
                             letterSpacing: 3,
                           ),
                         ),
@@ -612,9 +536,8 @@ class _Activity2ScreenState extends State<Activity2Screen> {
                         Text(
                           networkName,
                           style: const TextStyle(
-                            fontSize: 30,
-                            fontWeight:
-                                FontWeight.w900,
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
 
@@ -626,6 +549,7 @@ class _Activity2ScreenState extends State<Activity2Screen> {
                           )
                               ? 'Connection available'
                               : 'No active connection',
+
                           style: TextStyle(
                             color: isDark
                                 ? Colors.white54
@@ -638,20 +562,23 @@ class _Activity2ScreenState extends State<Activity2Screen> {
 
                   const SizedBox(height: 20),
 
+                  // ======================================
                   // REQUEST QUEUE
+                  // ======================================
+
                   _monitorCard(
                     isDark,
 
                     child: Column(
                       crossAxisAlignment:
                           CrossAxisAlignment.start,
+
                       children: [
                         const Text(
                           'REQUEST QUEUE',
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight:
-                                FontWeight.bold,
+                            fontWeight: FontWeight.bold,
                             letterSpacing: 3,
                           ),
                         ),
@@ -664,10 +591,10 @@ class _Activity2ScreenState extends State<Activity2Screen> {
                               : (_requestQueued
                                   ? 'QUEUED'
                                   : 'IDLE'),
+
                           style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight:
-                                FontWeight.w900,
+                            fontSize: 25,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
 
@@ -676,8 +603,7 @@ class _Activity2ScreenState extends State<Activity2Screen> {
                         if (_requestRunning ||
                             _requestQueued) ...[
                           LinearProgressIndicator(
-                            value:
-                                _progress / 100,
+                            value: _progress / 100,
                           ),
 
                           const SizedBox(height: 8),
@@ -686,31 +612,26 @@ class _Activity2ScreenState extends State<Activity2Screen> {
                             'Progress: $_progress%',
                           ),
 
-                          const SizedBox(height: 15),
+                          const SizedBox(height: 18),
                         ],
 
                         SizedBox(
                           width: double.infinity,
 
-                          child:
-                              ElevatedButton.icon(
+                          child: ElevatedButton.icon(
                             onPressed:
                                 _requestRunning
                                     ? null
                                     : _startRequest,
+
                             icon: const Icon(
                               Icons.cloud_download_outlined,
                             ),
+
                             label: Text(
                               _requestQueued
                                   ? 'WAITING FOR CONNECTION'
                                   : 'START LARGE REQUEST',
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              padding:
-                                  const EdgeInsets.symmetric(
-                                vertical: 16,
-                              ),
                             ),
                           ),
                         ),
@@ -720,7 +641,10 @@ class _Activity2ScreenState extends State<Activity2Screen> {
 
                   const SizedBox(height: 20),
 
+                  // ======================================
                   // EVENT LOG
+                  // ======================================
+
                   _monitorCard(
                     isDark,
 
@@ -742,6 +666,7 @@ class _Activity2ScreenState extends State<Activity2Screen> {
 
                             IconButton(
                               onPressed: _clearLog,
+
                               icon: const Icon(
                                 Icons.delete_outline,
                               ),
@@ -755,6 +680,7 @@ class _Activity2ScreenState extends State<Activity2Screen> {
                           Padding(
                             padding:
                                 const EdgeInsets.all(20),
+
                             child: Text(
                               'No events yet.',
                               style: TextStyle(
@@ -771,11 +697,14 @@ class _Activity2ScreenState extends State<Activity2Screen> {
                                   const EdgeInsets.symmetric(
                                 vertical: 7,
                               ),
+
                               child: Align(
                                 alignment:
                                     Alignment.centerLeft,
+
                                 child: Text(
                                   event,
+
                                   style:
                                       const TextStyle(
                                     fontSize: 12,
@@ -790,23 +719,24 @@ class _Activity2ScreenState extends State<Activity2Screen> {
 
                   const SizedBox(height: 25),
 
+                  // ======================================
+                  // BACK BUTTON
+                  // ======================================
+
                   SizedBox(
                     width: double.infinity,
+
                     child: ElevatedButton.icon(
                       onPressed: () {
                         Navigator.pop(context);
                       },
+
                       icon: const Icon(
                         Icons.arrow_back,
                       ),
+
                       label: const Text(
                         'BACK TO HOME',
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        padding:
-                            const EdgeInsets.symmetric(
-                          vertical: 17,
-                        ),
                       ),
                     ),
                   ),
@@ -821,9 +751,157 @@ class _Activity2ScreenState extends State<Activity2Screen> {
     );
   }
 
-  // =============================
-  // REUSABLE UI COMPONENTS
-  // =============================
+  // ==========================================
+  // ACTIVITY HEADER
+  // ==========================================
+
+  Widget _activityHeader(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(25),
+
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white
+            : Colors.black,
+
+        borderRadius:
+            BorderRadius.circular(25),
+      ),
+
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+
+        children: [
+          Text(
+            '100 POINTS',
+
+            style: TextStyle(
+              color: isDark
+                  ? Colors.black54
+                  : Colors.white70,
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 2,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            'HANDS-ON ACTIVITY #2',
+
+            style: TextStyle(
+              color: isDark
+                  ? Colors.black
+                  : Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            'Active Network Monitor & Handover Handling',
+
+            style: TextStyle(
+              color: isDark
+                  ? Colors.black87
+                  : Colors.white70,
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+
+          const SizedBox(height: 15),
+
+          Row(
+            children: [
+              Icon(
+                Icons.calendar_today_outlined,
+                size: 16,
+                color: isDark
+                    ? Colors.black54
+                    : Colors.white70,
+              ),
+
+              const SizedBox(width: 8),
+
+              Text(
+                'Due 18 Sept, 23:59',
+
+                style: TextStyle(
+                  color: isDark
+                      ? Colors.black54
+                      : Colors.white70,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // LIVE HEADER
+  // ==========================================
+
+  Widget _liveHeader(bool isDark) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(25),
+
+      decoration: BoxDecoration(
+        color: isDark
+            ? Colors.white
+            : Colors.black,
+
+        borderRadius:
+            BorderRadius.circular(25),
+      ),
+
+      child: Column(
+        crossAxisAlignment:
+            CrossAxisAlignment.start,
+
+        children: [
+          Text(
+            'LIVE DEMONSTRATION',
+
+            style: TextStyle(
+              color: isDark
+                  ? Colors.black54
+                  : Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 3,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            'NETWORK MONITOR',
+
+            style: TextStyle(
+              color: isDark
+                  ? Colors.black
+                  : Colors.white,
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // SECTION TITLE
+  // ==========================================
 
   Widget _sectionTitle(
     String title,
@@ -831,6 +909,7 @@ class _Activity2ScreenState extends State<Activity2Screen> {
   ) {
     return Text(
       title,
+
       style: TextStyle(
         fontSize: 13,
         fontWeight: FontWeight.bold,
@@ -842,10 +921,14 @@ class _Activity2ScreenState extends State<Activity2Screen> {
     );
   }
 
-  Widget _contentCard(
-    bool isDark, {
-    required Widget child,
-  }) {
+  // ==========================================
+  // INFORMATION CARD
+  // ==========================================
+
+  Widget _infoCard(
+    bool isDark,
+    String text,
+  ) {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
@@ -865,17 +948,28 @@ class _Activity2ScreenState extends State<Activity2Screen> {
         ),
       ),
 
-      child: child,
+      child: Text(
+        text,
+
+        style: const TextStyle(
+          fontSize: 15,
+          height: 1.6,
+        ),
+      ),
     );
   }
 
+  // ==========================================
+  // INSTRUCTION CARD
+  // ==========================================
+
   Widget _instructionCard(
-    bool isDark, {
-    required String number,
-    required String title,
-    required String description,
-    required IconData icon,
-  }) {
+    bool isDark,
+    String number,
+    String title,
+    String description,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(18),
 
@@ -914,6 +1008,7 @@ class _Activity2ScreenState extends State<Activity2Screen> {
 
             child: Icon(
               icon,
+
               color: isDark
                   ? Colors.black
                   : Colors.white,
@@ -926,11 +1021,13 @@ class _Activity2ScreenState extends State<Activity2Screen> {
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
+
               children: [
                 Row(
                   children: [
                     Text(
                       number,
+
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight:
@@ -947,6 +1044,7 @@ class _Activity2ScreenState extends State<Activity2Screen> {
                     Expanded(
                       child: Text(
                         title,
+
                         style: const TextStyle(
                           fontSize: 17,
                           fontWeight:
@@ -961,6 +1059,7 @@ class _Activity2ScreenState extends State<Activity2Screen> {
 
                 Text(
                   description,
+
                   style: TextStyle(
                     fontSize: 14,
                     height: 1.5,
@@ -976,6 +1075,10 @@ class _Activity2ScreenState extends State<Activity2Screen> {
       ),
     );
   }
+
+  // ==========================================
+  // MONITOR CARD
+  // ==========================================
 
   Widget _monitorCard(
     bool isDark, {
