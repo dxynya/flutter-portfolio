@@ -8,6 +8,7 @@ import 'screens/home_screen.dart';
 import 'screens/activity1_screen.dart';
 import 'screens/activity2_screen.dart';
 import 'screens/activity3_screen.dart';
+import 'screens/activity4_screen.dart';
 import 'screens/settings_screen.dart';
 
 void main() {
@@ -193,6 +194,10 @@ class MyApp extends StatelessWidget {
         '/activity3':
             (context) =>
                 const Activity3Screen(),
+
+        '/activity4': 
+            (context) =>
+                const Activity4Screen(),
 
         '/settings':
             (context) =>

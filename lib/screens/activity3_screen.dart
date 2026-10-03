@@ -32,6 +32,35 @@ class _Activity3ScreenState
     final provider =
         context.watch<NetworkHealthProvider>();
 
+    final bool isDegraded =
+        provider.health ==
+            NetworkHealth.degraded;
+
+    // Show zero instead of old values
+    // whenever the connection is degraded.
+    final double idlePing =
+        isDegraded ? 0 : provider.idlePing;
+
+    final double downloadSpeed =
+        isDegraded
+            ? 0
+            : provider.downloadSpeed;
+
+    final double downloadPing =
+        isDegraded
+            ? 0
+            : provider.downloadPing;
+
+    final double uploadSpeed =
+        isDegraded
+            ? 0
+            : provider.uploadSpeed;
+
+    final double uploadPing =
+        isDegraded
+            ? 0
+            : provider.uploadPing;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -50,9 +79,13 @@ class _Activity3ScreenState
           child: Column(
             crossAxisAlignment:
                 CrossAxisAlignment.start,
+
             children: [
 
+              // =================================================
               // HEADER
+              // =================================================
+
               const Text(
                 '100 POINTS',
                 style: TextStyle(
@@ -62,7 +95,9 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(
+                height: 8,
+              ),
 
               const Text(
                 'HANDS-ON ACTIVITY #3',
@@ -72,7 +107,9 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(
+                height: 8,
+              ),
 
               const Text(
                 'Dynamic Performance Throttle App',
@@ -82,7 +119,9 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 8),
+              const SizedBox(
+                height: 8,
+              ),
 
               const Text(
                 'Due Tomorrow, 23:59',
@@ -91,9 +130,14 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(
+                height: 30,
+              ),
 
+              // =================================================
               // OBJECTIVE
+              // =================================================
+
               const Text(
                 'OBJECTIVE',
                 style: TextStyle(
@@ -103,7 +147,9 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
 
               const Text(
                 'Build a Flutter app containing a diagnostic tool '
@@ -117,9 +163,14 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(
+                height: 30,
+              ),
 
+              // =================================================
               // INSTRUCTIONS
+              // =================================================
+
               const Text(
                 'INSTRUCTIONS',
                 style: TextStyle(
@@ -129,7 +180,9 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 15),
+              const SizedBox(
+                height: 15,
+              ),
 
               _instruction(
                 '1.',
@@ -171,9 +224,14 @@ class _Activity3ScreenState
                     'latency, and active connection in real time.',
               ),
 
-              const SizedBox(height: 30),
+              const SizedBox(
+                height: 30,
+              ),
 
+              // =================================================
               // DELIVERABLES
+              // =================================================
+
               const Text(
                 'DELIVERABLES',
                 style: TextStyle(
@@ -183,7 +241,9 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 10),
+              const SizedBox(
+                height: 10,
+              ),
 
               const Text(
                 '• Updated source repository link\n'
@@ -196,9 +256,14 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 35),
+              const SizedBox(
+                height: 35,
+              ),
 
+              // =================================================
               // LIVE DIAGNOSTIC
+              // =================================================
+
               const Text(
                 'LIVE DIAGNOSTIC',
                 style: TextStyle(
@@ -208,7 +273,9 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 5),
+              const SizedBox(
+                height: 5,
+              ),
 
               const Text(
                 'NETWORK HEALTH',
@@ -218,41 +285,54 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
+              // =================================================
               // HEALTH CARD
+              // =================================================
+
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(22),
+                  padding:
+                      const EdgeInsets.all(22),
 
                   child: Column(
                     children: [
 
-                      Icon(
+                      const Icon(
                         Icons.network_check,
                         size: 60,
                       ),
 
-                      const SizedBox(height: 15),
+                      const SizedBox(
+                        height: 15,
+                      ),
 
                       Text(
                         provider.healthLabel,
                         style: const TextStyle(
                           fontSize: 30,
-                          fontWeight: FontWeight.w900,
+                          fontWeight:
+                              FontWeight.w900,
                           letterSpacing: 1,
                         ),
                       ),
 
-                      const SizedBox(height: 8),
+                      const SizedBox(
+                        height: 8,
+                      ),
 
                       Text(
                         provider.isTesting
                             ? 'Running diagnostic...'
                             : 'Current Network: '
                                 '${provider.currentNetwork}',
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
+                        textAlign:
+                            TextAlign.center,
+                        style:
+                            const TextStyle(
                           fontSize: 15,
                         ),
                       ),
@@ -261,81 +341,99 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
+              // =================================================
               // METRICS
+              // =================================================
+
               GridView.count(
                 crossAxisCount: 2,
                 shrinkWrap: true,
+
                 physics:
                     const NeverScrollableScrollPhysics(),
+
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
+
                 childAspectRatio: 1.35,
 
                 children: [
 
                   _metricCard(
                     'IDLE PING',
-                    '${provider.idlePing.toStringAsFixed(1)} ms',
+                    '${idlePing.toStringAsFixed(1)} ms',
                     Icons.timer_outlined,
                   ),
 
                   _metricCard(
                     'DOWNLOAD',
-                    '${provider.downloadSpeed.toStringAsFixed(2)} Mbps',
+                    '${downloadSpeed.toStringAsFixed(2)} Mbps',
                     Icons.download,
                   ),
 
                   _metricCard(
                     'DOWNLOAD PING',
-                    '${provider.downloadPing.toStringAsFixed(1)} ms',
+                    '${downloadPing.toStringAsFixed(1)} ms',
                     Icons.speed,
                   ),
 
                   _metricCard(
                     'UPLOAD',
-                    '${provider.uploadSpeed.toStringAsFixed(2)} Mbps',
+                    '${uploadSpeed.toStringAsFixed(2)} Mbps',
                     Icons.upload,
                   ),
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
+              // =================================================
               // LATENCY DETAILS
+              // =================================================
+
               Card(
                 child: Padding(
-                  padding: const EdgeInsets.all(20),
+                  padding:
+                      const EdgeInsets.all(20),
 
                   child: Column(
                     crossAxisAlignment:
                         CrossAxisAlignment.start,
+
                     children: [
 
                       const Text(
                         'LATENCY DETAILS',
                         style: TextStyle(
                           fontSize: 17,
-                          fontWeight: FontWeight.w900,
+                          fontWeight:
+                              FontWeight.w900,
                         ),
                       ),
 
-                      const SizedBox(height: 15),
+                      const SizedBox(
+                        height: 15,
+                      ),
 
                       _detailRow(
                         'Idle Ping',
-                        '${provider.idlePing.toStringAsFixed(1)} ms',
+                        '${idlePing.toStringAsFixed(1)} ms',
                       ),
 
                       _detailRow(
                         'Download Ping',
-                        '${provider.downloadPing.toStringAsFixed(1)} ms',
+                        '${downloadPing.toStringAsFixed(1)} ms',
                       ),
 
                       _detailRow(
                         'Upload Ping',
-                        '${provider.uploadPing.toStringAsFixed(1)} ms',
+                        '${uploadPing.toStringAsFixed(1)} ms',
                       ),
 
                       _detailRow(
@@ -345,31 +443,42 @@ class _Activity3ScreenState
 
                       _detailRow(
                         'Upload Speed',
-                        '${provider.uploadSpeed.toStringAsFixed(2)} Mbps',
+                        '${uploadSpeed.toStringAsFixed(2)} Mbps',
                       ),
                     ],
                   ),
                 ),
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(
+                height: 20,
+              ),
 
+              // =================================================
               // RUN DIAGNOSTIC
+              // =================================================
+
               SizedBox(
-                width: double.infinity,
+                width:
+                    double.infinity,
 
-                child: ElevatedButton.icon(
-                  onPressed: provider.isTesting
-                      ? null
-                      : () {
-                          provider.runDiagnostic();
-                        },
+                child:
+                    ElevatedButton.icon(
+                  onPressed:
+                      provider.isTesting
+                          ? null
+                          : () {
+                              provider
+                                  .runDiagnostic();
+                            },
 
-                  icon: const Icon(
+                  icon:
+                      const Icon(
                     Icons.play_arrow,
                   ),
 
-                  label: Text(
+                  label:
+                      Text(
                     provider.isTesting
                         ? 'TESTING...'
                         : 'RUN DIAGNOSTIC NOW',
@@ -377,18 +486,28 @@ class _Activity3ScreenState
                 ),
               ),
 
-              const SizedBox(height: 15),
+              const SizedBox(
+                height: 15,
+              ),
 
+              // =================================================
               // BACK
-              SizedBox(
-                width: double.infinity,
+              // =================================================
 
-                child: OutlinedButton(
+              SizedBox(
+                width:
+                    double.infinity,
+
+                child:
+                    OutlinedButton(
                   onPressed: () {
-                    Navigator.pop(context);
+                    Navigator.pop(
+                      context,
+                    );
                   },
 
-                  child: const Text(
+                  child:
+                      const Text(
                     'BACK TO HOME',
                   ),
                 ),
@@ -400,6 +519,10 @@ class _Activity3ScreenState
     );
   }
 
+  // ============================================================
+  // INSTRUCTION
+  // ============================================================
+
   Widget _instruction(
     String number,
     String title,
@@ -407,42 +530,55 @@ class _Activity3ScreenState
   ) {
     return Padding(
       padding:
-          const EdgeInsets.only(bottom: 18),
+          const EdgeInsets.only(
+        bottom: 18,
+      ),
 
       child: Row(
         crossAxisAlignment:
             CrossAxisAlignment.start,
+
         children: [
 
           Text(
             number,
-            style: const TextStyle(
+            style:
+                const TextStyle(
               fontSize: 16,
-              fontWeight: FontWeight.w900,
+              fontWeight:
+                  FontWeight.w900,
             ),
           ),
 
-          const SizedBox(width: 10),
+          const SizedBox(
+            width: 10,
+          ),
 
           Expanded(
             child: Column(
               crossAxisAlignment:
                   CrossAxisAlignment.start,
+
               children: [
 
                 Text(
                   title,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 16,
-                    fontWeight: FontWeight.w900,
+                    fontWeight:
+                        FontWeight.w900,
                   ),
                 ),
 
-                const SizedBox(height: 4),
+                const SizedBox(
+                  height: 4,
+                ),
 
                 Text(
                   description,
-                  style: const TextStyle(
+                  style:
+                      const TextStyle(
                     fontSize: 14,
                     height: 1.5,
                   ),
@@ -455,6 +591,10 @@ class _Activity3ScreenState
     );
   }
 
+  // ============================================================
+  // METRIC CARD
+  // ============================================================
+
   Widget _metricCard(
     String title,
     String value,
@@ -462,7 +602,8 @@ class _Activity3ScreenState
   ) {
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding:
+            const EdgeInsets.all(14),
 
         child: Column(
           mainAxisAlignment:
@@ -475,25 +616,37 @@ class _Activity3ScreenState
               size: 28,
             ),
 
-            const SizedBox(height: 8),
+            const SizedBox(
+              height: 8,
+            ),
 
             Text(
               title,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
+              textAlign:
+                  TextAlign.center,
+
+              style:
+                  const TextStyle(
                 fontSize: 11,
-                fontWeight: FontWeight.w900,
+                fontWeight:
+                    FontWeight.w900,
               ),
             ),
 
-            const SizedBox(height: 4),
+            const SizedBox(
+              height: 4,
+            ),
 
             Text(
               value,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
+              textAlign:
+                  TextAlign.center,
+
+              style:
+                  const TextStyle(
                 fontSize: 15,
-                fontWeight: FontWeight.w900,
+                fontWeight:
+                    FontWeight.w900,
               ),
             ),
           ],
@@ -501,6 +654,10 @@ class _Activity3ScreenState
       ),
     );
   }
+
+  // ============================================================
+  // DETAIL ROW
+  // ============================================================
 
   Widget _detailRow(
     String label,
@@ -521,19 +678,24 @@ class _Activity3ScreenState
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(
+              style:
+                  const TextStyle(
                 fontSize: 14,
               ),
             ),
           ),
 
-          const SizedBox(width: 10),
+          const SizedBox(
+            width: 10,
+          ),
 
           Text(
             value,
-            style: const TextStyle(
+            style:
+                const TextStyle(
               fontSize: 14,
-              fontWeight: FontWeight.w900,
+              fontWeight:
+                  FontWeight.w900,
             ),
           ),
         ],

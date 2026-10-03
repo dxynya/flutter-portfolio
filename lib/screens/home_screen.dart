@@ -7,8 +7,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDark =
-        Theme.of(context).brightness ==
-            Brightness.dark;
+        Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       appBar: AppBar(
@@ -19,7 +18,6 @@ class HomeScreen extends StatelessWidget {
             letterSpacing: 3,
           ),
         ),
-
         actions: [
           IconButton(
             onPressed: () {
@@ -28,12 +26,10 @@ class HomeScreen extends StatelessWidget {
                 '/settings',
               );
             },
-
             icon: const Icon(
               Icons.settings_outlined,
             ),
           ),
-
           const SizedBox(width: 8),
         ],
       ),
@@ -45,17 +41,14 @@ class HomeScreen extends StatelessWidget {
                 constraints.maxWidth >= 700;
 
             return SingleChildScrollView(
-              padding:
-                  EdgeInsets.symmetric(
-                horizontal:
-                    isWide ? 50 : 20,
+              padding: EdgeInsets.symmetric(
+                horizontal: isWide ? 50 : 20,
                 vertical: 20,
               ),
 
               child: Center(
                 child: ConstrainedBox(
-                  constraints:
-                      const BoxConstraints(
+                  constraints: const BoxConstraints(
                     maxWidth: 1100,
                   ),
 
@@ -65,34 +58,27 @@ class HomeScreen extends StatelessWidget {
 
                     children: [
 
+                      // =========================
                       // HERO
+                      // =========================
                       Container(
-                        width:
-                            double.infinity,
-
-                        padding:
-                            EdgeInsets.all(
+                        width: double.infinity,
+                        padding: EdgeInsets.all(
                           isWide ? 40 : 25,
                         ),
 
-                        decoration:
-                            BoxDecoration(
+                        decoration: BoxDecoration(
                           color: isDark
                               ? Colors.white
                               : Colors.black,
-
                           borderRadius:
-                              BorderRadius.circular(
-                            30,
-                          ),
+                              BorderRadius.circular(30),
                         ),
 
                         child: isWide
                             ? Row(
                                 children: [
-                                  _profileIcon(
-                                    isDark,
-                                  ),
+                                  _profileIcon(isDark),
 
                                   const SizedBox(
                                     width: 30,
@@ -131,6 +117,9 @@ class HomeScreen extends StatelessWidget {
                         height: 35,
                       ),
 
+                      // =========================
+                      // MASTER COMPILATION
+                      // =========================
                       const Text(
                         'MASTER COMPILATION',
                         style: TextStyle(
@@ -159,12 +148,15 @@ class HomeScreen extends StatelessWidget {
                         height: 20,
                       ),
 
+                      // =========================
                       // ACTIVITY CARDS
+                      // =========================
+
                       if (isWide)
                         Column(
                           children: [
 
-                            // ROW 1
+                            // ---------- ROW 1 ----------
                             Row(
                               crossAxisAlignment:
                                   CrossAxisAlignment
@@ -172,6 +164,7 @@ class HomeScreen extends StatelessWidget {
 
                               children: [
 
+                                // ACTIVITY 1
                                 Expanded(
                                   child:
                                       ActivityCard(
@@ -196,6 +189,7 @@ class HomeScreen extends StatelessWidget {
                                   width: 15,
                                 ),
 
+                                // ACTIVITY 2
                                 Expanded(
                                   child:
                                       ActivityCard(
@@ -204,9 +198,8 @@ class HomeScreen extends StatelessWidget {
                                         'Network Monitor',
                                     description:
                                         'Active Network Monitor & Handover Handling',
-                                    icon:
-                                        Icons
-                                            .wifi_tethering,
+                                    icon: Icons
+                                        .wifi_tethering,
                                     onTap: () {
                                       Navigator
                                           .pushNamed(
@@ -223,10 +216,15 @@ class HomeScreen extends StatelessWidget {
                               height: 15,
                             ),
 
-                            // ROW 2
+                            // ---------- ROW 2 ----------
                             Row(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment
+                                      .start,
+
                               children: [
 
+                                // ACTIVITY 3
                                 Expanded(
                                   child:
                                       ActivityCard(
@@ -235,9 +233,8 @@ class HomeScreen extends StatelessWidget {
                                         'Network Diagnostic',
                                     description:
                                         'Speed, latency & connection health',
-                                    icon:
-                                        Icons
-                                            .speed_outlined,
+                                    icon: Icons
+                                        .speed_outlined,
                                     onTap: () {
                                       Navigator
                                           .pushNamed(
@@ -252,19 +249,24 @@ class HomeScreen extends StatelessWidget {
                                   width: 15,
                                 ),
 
+                                // ACTIVITY 4
                                 Expanded(
                                   child:
-                                      Container(
-                                    height: 180,
-
-                                    decoration:
-                                        BoxDecoration(
-                                      borderRadius:
-                                          BorderRadius
-                                              .circular(
-                                        20,
-                                      ),
-                                    ),
+                                      ActivityCard(
+                                    number: '04',
+                                    title:
+                                        'Local Mesh Chat',
+                                    description:
+                                        'Offline peer-to-peer messaging',
+                                    icon: Icons
+                                        .forum_outlined,
+                                    onTap: () {
+                                      Navigator
+                                          .pushNamed(
+                                        context,
+                                        '/activity4',
+                                      );
+                                    },
                                   ),
                                 ),
                               ],
@@ -282,8 +284,7 @@ class HomeScreen extends StatelessWidget {
                                   'Flutter Basics',
                               description:
                                   'Flutter Portfolio & State Management',
-                              icon:
-                                  Icons.code,
+                              icon: Icons.code,
                               onTap: () {
                                 Navigator
                                     .pushNamed(
@@ -304,9 +305,8 @@ class HomeScreen extends StatelessWidget {
                                   'Network Monitor',
                               description:
                                   'Active Network Monitor & Handover Handling',
-                              icon:
-                                  Icons
-                                      .wifi_tethering,
+                              icon: Icons
+                                  .wifi_tethering,
                               onTap: () {
                                 Navigator
                                     .pushNamed(
@@ -327,14 +327,35 @@ class HomeScreen extends StatelessWidget {
                                   'Network Diagnostic',
                               description:
                                   'Speed, latency & connection health',
-                              icon:
-                                  Icons
-                                      .speed_outlined,
+                              icon: Icons
+                                  .speed_outlined,
                               onTap: () {
                                 Navigator
                                     .pushNamed(
                                   context,
                                   '/activity3',
+                                );
+                              },
+                            ),
+
+                            const SizedBox(
+                              height: 15,
+                            ),
+
+                            // ACTIVITY 4
+                            ActivityCard(
+                              number: '04',
+                              title:
+                                  'Local Mesh Chat',
+                              description:
+                                  'Offline peer-to-peer messaging',
+                              icon: Icons
+                                  .forum_outlined,
+                              onTap: () {
+                                Navigator
+                                    .pushNamed(
+                                  context,
+                                  '/activity4',
                                 );
                               },
                             ),
@@ -345,15 +366,14 @@ class HomeScreen extends StatelessWidget {
                         height: 25,
                       ),
 
+                      // =========================
                       // RESPONSIVE INDICATOR
+                      // =========================
                       Container(
-                        width:
-                            double.infinity,
+                        width: double.infinity,
 
                         padding:
-                            const EdgeInsets.all(
-                          18,
-                        ),
+                            const EdgeInsets.all(18),
 
                         decoration:
                             BoxDecoration(
@@ -362,8 +382,7 @@ class HomeScreen extends StatelessWidget {
                             18,
                           ),
 
-                          border:
-                              Border.all(
+                          border: Border.all(
                             color: isDark
                                 ? Colors.white12
                                 : Colors.black12,
@@ -412,15 +431,15 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _profileIcon(
-    bool isDark,
-  ) {
+  // =========================
+  // PROFILE ICON
+  // =========================
+  Widget _profileIcon(bool isDark) {
     return Container(
       width: 75,
       height: 75,
 
-      decoration:
-          BoxDecoration(
+      decoration: BoxDecoration(
         color: isDark
             ? Colors.black
             : Colors.white,
@@ -431,7 +450,6 @@ class HomeScreen extends StatelessWidget {
       child: Icon(
         Icons.person_outline,
         size: 40,
-
         color: isDark
             ? Colors.white
             : Colors.black,
@@ -439,9 +457,10 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  Widget _heroText(
-    bool isDark,
-  ) {
+  // =========================
+  // HERO TEXT
+  // =========================
+  Widget _heroText(bool isDark) {
     return Column(
       crossAxisAlignment:
           CrossAxisAlignment.start,
